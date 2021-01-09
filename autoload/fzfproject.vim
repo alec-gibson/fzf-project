@@ -40,12 +40,21 @@ function! s:switchToProjectDir(projectLine)
 endfunction
 
 function! s:getAllDirsFromWorkspaces(workspaces)
+  " base case
+  if len(a:workspaces) == 0
+    return []
+  endif
   let l:dirs = globpath(join(a:workspaces, ','), '*/', 1)
   let l:output = []
+  let l:nonGitDirs = []
   for dir in split(l:dirs, "\n")
-    call add(l:output, fnamemodify(dir, ':h'))
+    if FugitiveIsGitDir(dir . '/.git')
+      call add(l:output, fnamemodify(dir, ':h'))
+    else
+      call add(l:nonGitDirs, fnamemodify(dir, ':h'))
+    endif
   endfor
-  return l:output
+  return l:output + s:getAllDirsFromWorkspaces(l:nonGitDirs)
 endfunction
 
 function! s:formatProjectList(dirs)
